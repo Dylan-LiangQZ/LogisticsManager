@@ -116,6 +116,8 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 }
 
 
+
+
 void CAddOrderPage::OnBnClickedButtonAddorder()
 {
 	// TODO: Add your control notification handler code here
