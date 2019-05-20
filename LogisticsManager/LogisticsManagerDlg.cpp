@@ -9,9 +9,13 @@
 #include "afxdialogex.h"
 
 #include "pages\LoginDlg.h"
-#include "LMConstant.h"
 
 #include "Tinyxml\XMLFile.h"
+#include "DataBase\DBConn.h"
+#include "LMCommonVariable.h"
+
+const static int TOOLBARHEIGHT = 80;
+const static int STATUSBARHEIGHT = 40;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -125,6 +129,19 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO:  在此添加额外的初始化代码
+	LoadParameters();
+	
+	// Init DataBase
+	CDBConn::Instance()->InitDataBase(m_szDataBaseName);
+	CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
+
+	//std::vector<CString> szTableColV1;
+	//szTableColV1.push_back("PhoneNumber");
+	//std::vector<CString> szTableRowDataV1;
+	//szTableRowDataV1.push_back("91096110");
+	//CDBConn::Instance()->AlterTableRecord("CustomerList", szTableColV1, szTableRowDataV1, "CustomerName = 'Zeyu'");
+	//szErrInfo = CDBConn::Instance()->GetLastErrInfo();
+	//
 	SetIcon(LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME)), TRUE);
 
 	m_Menu.LoadMenu(IDR_MENU1);
@@ -132,37 +149,11 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 
 	// Full Screen
 	int nCurScreenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int nCurScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 	CRect rectWorkArea;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rectWorkArea, 0);
 	MoveWindow(0, 0, nCurScreenWidth, rectWorkArea.bottom);
 
-	// Add pages
-	m_PagesMap.clear();
-	m_pUserManagePage = new CUserManagePage;
-	m_pUserManagePage->Create(IDD_DIALOG_USERMANAGE, this);
-	m_pUserManagePage->ShowWindow(SW_HIDE);
-
-	m_pAddOrderPage = new CAddOrderPage;
-	m_pAddOrderPage->Create(IDD_DIALOG_ADDORDER, this);
-	m_pAddOrderPage->ShowWindow(SW_HIDE);
-
-	m_pQueryOrderPage = new CQueryOrderPage;
-	m_pQueryOrderPage->Create(IDD_DIALOG_QUERYORDER, this);
-	m_pQueryOrderPage->ShowWindow(SW_HIDE);
-
-	m_pCSummaryPage = new CSummaryPage;
-	m_pCSummaryPage->Create(IDD_DIALOG_SUMMARY, this);
-	m_pCSummaryPage->ShowWindow(SW_HIDE);
-
-	m_PagesMap.insert(std::make_pair(0, m_pUserManagePage));
-	m_PagesMap.insert(std::make_pair(1, m_pAddOrderPage));
-	m_PagesMap.insert(std::make_pair(2, m_pQueryOrderPage));
-	m_PagesMap.insert(std::make_pair(3, m_pCSummaryPage));
-
-	InitializeConfig();
-
-	// 创建状态栏
+	// 创建状态栏 /////////////////////////////////////////////////////////
 	CTime Time;
 	Time = CTime::GetCurrentTime();
 	CString Str = Time.Format("%Y-%m-%d");
@@ -176,18 +167,52 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	m_Statusbar.SetIndicators(Array, 4);
 	for (int n = 0; n < 3; n++)
 	{
-		m_Statusbar.SetPaneInfo(n, Array[n], 0, STATUSHEIGHT);
+		m_Statusbar.SetPaneInfo(n, Array[n], 0, 80);
 	}
-	m_Statusbar.SetPaneInfo(0, Array[0], 0, 200);
-	m_Statusbar.SetPaneInfo(1, Array[1], 0, 400);
-	m_Statusbar.SetPaneInfo(2, Array[2], 0, 500);
-	m_Statusbar.SetPaneText(0, "物流订单管理系统");
-	m_Statusbar.SetPaneText(1, "用户：请登录");
-	m_Statusbar.SetPaneText(2, "当前时间 : " + Str);
+	m_Statusbar.SetPaneInfo(0, Array[0], 0, nCurScreenWidth*0.2);
+	m_Statusbar.SetPaneInfo(1, Array[1], 0, nCurScreenWidth*0.3);
+	m_Statusbar.SetPaneInfo(2, Array[2], 0, nCurScreenWidth*0.5);
+	m_Statusbar.SetPaneText(0, "  物流订单管理系统");
+	m_Statusbar.SetPaneText(1, "  用户：请登录");
+	m_Statusbar.SetPaneText(2, "  当前时间 : " + Str);
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 
-	CLoginDlg Logindlg;
-	if (Logindlg.DoModal() == IDOK)
+	InitializeConfig();
+
+	// Add pages
+	CRect rectStatusBar;
+	m_Statusbar.GetClientRect(rectStatusBar);
+	CRect rectMenuBar;
+	m_Toolbar.GetClientRect(rectMenuBar);
+	CRect rectDlg;
+	GetClientRect(rectDlg);
+	
+	m_PagesMap.clear();
+	m_pUserManagePage = new CUserManagePage;
+	m_pUserManagePage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
+	m_pUserManagePage->Create(IDD_DIALOG_USERMANAGE, this);
+
+	m_pAddOrderPage = new CAddOrderPage;
+	m_pAddOrderPage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
+	m_pAddOrderPage->Create(IDD_DIALOG_ADDORDER, this);
+
+	m_pQueryOrderPage = new CQueryOrderPage;
+	m_pQueryOrderPage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
+	m_pQueryOrderPage->Create(IDD_DIALOG_QUERYORDER, this);
+
+	m_pCSummaryPage = new CSummaryPage;
+	m_pCSummaryPage->Create(IDD_DIALOG_SUMMARY, this);
+	m_pCSummaryPage->ShowWindow(SW_HIDE);
+
+	m_PagesMap.insert(std::make_pair(0, m_pUserManagePage));
+	m_PagesMap.insert(std::make_pair(1, m_pAddOrderPage));
+	m_PagesMap.insert(std::make_pair(2, m_pQueryOrderPage));
+	m_PagesMap.insert(std::make_pair(3, m_pCSummaryPage));
+
+
+	// 对话框 /////////////////////////////////////////////////////////////
+	//CLoginDlg Logindlg;
+	//if (Logindlg.DoModal() == IDOK)
 	{
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_USER, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_ADDORDER, true);
@@ -196,7 +221,7 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 
 		m_Statusbar.SetPaneText(1, "用户：zeyu");
 	}
-	else
+	//else
 	{
 
 	}
@@ -247,7 +272,7 @@ void CLogisticsManagerDlg::OnPaint()
 
 	for (auto iter = m_PagesMap.begin(); iter != m_PagesMap.end(); ++iter)
 	{
-		(*iter).second->MoveWindow(0, MENUHEIGHT, WINDOWWIDTH, WINDOWHEIGHT - MENUHEIGHT - STATUSHEIGHT - 30);
+		//(*iter).second->MoveWindow(0, 80, WINDOWWIDTH, WINDOWHEIGHT - MENUHEIGHT - STATUSHEIGHT - 30);
 	}
 }
 
@@ -297,20 +322,33 @@ BOOL CLogisticsManagerDlg::CanExit()
 }
 
 
-void CLogisticsManagerDlg::InitializeConfig()
+void CLogisticsManagerDlg::LoadParameters()
 {
 	CString szSystemFile;
 	szSystemFile.Format(_T("Config\\System.xml"));
-	CSorXMLFile  xmlFileSystem(CString("System"));
+	CXMLFile  xmlFileSystem(CString("System"));
 	xmlFileSystem.Load(szSystemFile);
 
-	CSorXMLElementHandle rootHandle(xmlFileSystem.Root());
+	CXMLElementHandle rootHandle(xmlFileSystem.Root());
 
-	int nUserType;
-	rootHandle.GetInt("UserType", nUserType);
+	rootHandle.GetInt("UserType", m_nUserType);
+	rootHandle.GetStr("DataBaseName", m_szDataBaseName);
 
+	CXMLElementHandle ElementHandle1(rootHandle.FirstChild("PackingWay").ToElement());
+	CLMCommonVariable::Instance()->LoadPackingWay(ElementHandle1);
+
+	CXMLElementHandle ElementHandle2(rootHandle.FirstChild("PayWay").ToElement());
+	CLMCommonVariable::Instance()->LoadPayWay(ElementHandle2);
+
+	CXMLElementHandle ElementHandle3(rootHandle.FirstChild("DeliveryFare").ToElement());
+	CLMCommonVariable::Instance()->LoadDeliveyFare(ElementHandle3);
+}
+
+
+void CLogisticsManagerDlg::InitializeConfig()
+{	
 	// 创建菜单
-	switch (nUserType)
+	switch (m_nUserType)
 	{
 	case 0:	// All Pages
 	{	
@@ -336,7 +374,7 @@ void CLogisticsManagerDlg::InitializeConfig()
 		m_Toolbar.SetButtonText(3, "统计结算");
 		m_Toolbar.GetToolBarCtrl().SetButtonWidth(60, 120);
 		m_Toolbar.GetToolBarCtrl().SetImageList(&m_Imagelist);
-		m_Toolbar.SetSizes(CSize(100, MENUHEIGHT), CSize(50, 40));
+		m_Toolbar.SetSizes(CSize(100, TOOLBARHEIGHT), CSize(50, 40));
 		RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_USER, false);
@@ -364,7 +402,7 @@ void CLogisticsManagerDlg::InitializeConfig()
 		m_Toolbar.SetButtonText(0, "创建订单");
 		m_Toolbar.GetToolBarCtrl().SetButtonWidth(60, 120);
 		m_Toolbar.GetToolBarCtrl().SetImageList(&m_Imagelist);
-		m_Toolbar.SetSizes(CSize(100, MENUHEIGHT), CSize(50, 40));
+		m_Toolbar.SetSizes(CSize(100, TOOLBARHEIGHT), CSize(50, 40));
 		RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_ADDORDER, false);
@@ -437,7 +475,6 @@ void CLogisticsManagerDlg::OnBUTTONQueryOrder()
 		(*iter).second->ShowWindow(SW_HIDE);
 	}
 
-	m_pQueryOrderPage->AddOrderList();
 	m_pQueryOrderPage->ShowWindow(SW_SHOW);
 	m_pQueryOrderPage->UpdateWindow();	
 }

@@ -19,6 +19,9 @@
     <Filter Include="GUIElement">
       <UniqueIdentifier>{91dd9c02-2943-430f-8588-ec51e5a49d88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DBTables">
+      <UniqueIdentifier>{417d1c9c-4982-4d69-b7ed-268ceb549bd7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -57,10 +60,22 @@
     <ClInclude Include="GUIElement\TableControl.h">
       <Filter>GUIElement</Filter>
     </ClInclude>
-    <ClInclude Include="LMConstant.h">
+    <ClInclude Include="LogisticsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LogisticsManager.h">
+    <ClInclude Include="Pages\UserManageCreatePage.h">
+      <Filter>Pages</Filter>
+    </ClInclude>
+    <ClInclude Include="Pages\UserManageEditPage.h">
+      <Filter>Pages</Filter>
+    </ClInclude>
+    <ClInclude Include="DBTables\AllOrderTable.h">
+      <Filter>DBTables</Filter>
+    </ClInclude>
+    <ClInclude Include="DBTables\CustomerTable.h">
+      <Filter>DBTables</Filter>
+    </ClInclude>
+    <ClInclude Include="LMCommonVariable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -93,6 +108,21 @@
       <Filter>GUIElement</Filter>
     </ClCompile>
     <ClCompile Include="LogisticsManagerDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\UserManageCreatePage.cpp">
+      <Filter>Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\UserManageEditPage.cpp">
+      <Filter>Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="DBTables\AllOrderTable.cpp">
+      <Filter>DBTables</Filter>
+    </ClCompile>
+    <ClCompile Include="DBTables\CustomerTable.cpp">
+      <Filter>DBTables</Filter>
+    </ClCompile>
+    <ClCompile Include="LMCommonVariable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

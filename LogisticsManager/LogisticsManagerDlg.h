@@ -46,9 +46,12 @@ protected:
 	CQueryOrderPage*		m_pQueryOrderPage;
 	CSummaryPage*			m_pCSummaryPage;
 
-	CImageList m_Imagelist;
-	CStatusBar m_Statusbar;
-	CToolBar m_Toolbar;
+	CImageList	m_Imagelist;
+	CStatusBar	m_Statusbar;
+	CToolBar	m_Toolbar;
+
+	CString		m_szDataBaseName;
+	int			m_nUserType;
 
 	BOOL CanExit();
 
@@ -62,6 +65,7 @@ protected:
 	virtual void OnCancel();
 
 	// User define function
+	void LoadParameters();
 	void InitializeConfig();
 
 	afx_msg void OnMENUlogin();
@@ -71,4 +75,6 @@ protected:
 	afx_msg void OnBUTTONSummary();
 
 	DECLARE_MESSAGE_MAP()
+
+public:
 };

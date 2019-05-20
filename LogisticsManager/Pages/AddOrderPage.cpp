@@ -5,10 +5,43 @@
 #include "..\LogisticsManager.h"
 #include "AddOrderPage.h"
 #include "afxdialogex.h"
-#include "..\LMConstant.h"
 #include <fstream>
+#include "..\DBTables\AllOrderTable.h"
+#include "..\DBTables\CustomerTable.h"
+#include "..\LMCommonVariable.h"
 
 // CAddOrderPage dialog
+
+static const CString gCustomerInfo[] =
+{
+	_T("客户姓名 :"),
+	_T("联系方式 :"),
+	_T("收货库房 :"),
+	_T("账户余额 :"),
+};
+
+static const CString gAddListCol[] =
+{
+	_T("商品"),
+	_T("件数"),
+	_T("重量"),
+	_T("体积"),
+	_T("承运商"),
+	_T("包装规格"),
+	_T("包装方式"),
+	_T("支付方式"),
+};
+
+
+static const CString gFareListCol[] =
+{
+	_T("密度"),
+	_T("运费"),
+	_T("包装费"),
+	_T("保险费"),
+	_T("总费用"),
+};
+
 
 IMPLEMENT_DYNAMIC(CAddOrderPage, CDialogEx)
 
@@ -20,29 +53,36 @@ CAddOrderPage::CAddOrderPage(CWnd* pParent /*=NULL*/)
 
 CAddOrderPage::~CAddOrderPage()
 {
-	for (int i = 0; i < sizeof(gszOrderTableColumnV) / sizeof(gszOrderTableColumnV[0]); i++)
+	for (int i = 0; i < sizeof(gAddListCol) / sizeof(gAddListCol[0]); i++)
 	{
-		CEdit* pEdit = (CEdit*)p_mAddOrderEdits.GetAt(i);
+		CEdit* pEdit = (CEdit*)m_pAddOrderEdits.GetAt(i);
 		if (pEdit != NULL)
 			delete pEdit;
-		p_mAddOrderEdits[i] = NULL;
+		m_pAddOrderEdits[i] = NULL;
 	}
-	p_mAddOrderEdits.RemoveAll();
+	m_pAddOrderEdits.RemoveAll();
 }
 
 void CAddOrderPage::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 
-	DDX_Control(pDX, IDC_LIST_ADDORDER, m_TableShowCtrl);
-	DDX_Control(pDX, IDC_LIST_ADDORDER0, m_TableAddCtrl);
+	DDX_Control(pDX, IDC_LIST_CUSTOMER, m_TableCustInfo);
+	DDX_Control(pDX, IDC_LIST_ADDORDER, m_TableAddCtrl);
+	DDX_Control(pDX, IDC_LIST_FARELIST, m_TableFareCtrl);
+	DDX_Control(pDX, IDC_LIST_SHOWORDER, m_TableShowOrder);
+	DDX_Control(pDX, IDC_DATETIMEPICKER1, m_DateTimeRecive);
+	DDX_Control(pDX, IDC_DATETIMEPICKER2, m_DateTimeDelivey);
 }
 
 
 BEGIN_MESSAGE_MAP(CAddOrderPage, CDialogEx)
-	ON_WM_PAINT()
+	ON_WM_PAINT()	
+	ON_WM_SIZE()
+	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(IDC_BUTTON_ADDITEM, &CAddOrderPage::OnBnClickedButtonAddItem)
-	ON_BN_CLICKED(IDC_BUTTON_ADDORDER, &CAddOrderPage::OnBnClickedButtonAddorder)
+	ON_BN_CLICKED(IDC_BUTTON_CALFARE, &CAddOrderPage::OnBnClickedButtonCalfare)
+	ON_BN_CLICKED(IDC_BUTTON_QUERYCUST, &CAddOrderPage::OnBnClickedButtonQuerycust)
 END_MESSAGE_MAP()
 
 
@@ -55,116 +95,420 @@ BOOL CAddOrderPage::OnInitDialog()
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
-	//
-	/*GetDlgItem(IDC_STATIC_AO1)->MoveWindow(10, 10, 100, 30);
-	GetDlgItem(IDC_EDIT_ORDERNAME)->MoveWindow(100, 10, 200, 30);
-	GetDlgItem(IDC_BUTTON_ADDITEM)->MoveWindow(320, 10, 200, 30);
-	GetDlgItem(IDC_BUTTON_ADDORDER)->MoveWindow(520, 10, 200, 30);*/
+	CAllOrderTable::Instance()->CreateTable();
+	//std::vector<CString> szTableRowDataV;
+	//szTableRowDataV.push_back("Zeyu");
+	//szTableRowDataV.push_back("91096118");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("qz@163.com");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("100");
+	//szTableRowDataV.push_back("乌鲁木齐");
+	//szTableRowDataV.push_back("ZY_WLMQ");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("");
+	//szTableRowDataV.push_back("");
+	//CCustomerListTable::Instance()->AddCustomerInfo(szTableRowDataV);
+
+	// 控件布局设计
+	CRect rectDlg;
+	GetClientRect(rectDlg);
+
+	MoveWindow(m_RectWorkingArea);
+	
+	double cx = 1.0 * m_RectWorkingArea.Width() / rectDlg.Width();
+	double cy = 1.0 * m_RectWorkingArea.Height() / rectDlg.Height();
+
+	OnResizeControl(IDC_STATIC_G1, cx, cy);
+	OnResizeControl(IDC_EDIT_ORDERNAME, cx, cy);
+	OnResizeControl(IDC_BUTTON_QUERYCUST, cx, cy);
+	OnResizeControl(IDC_LIST_CUSTOMER, cx, cy);
+	OnResizeControl(IDC_STATIC_G2, cx, cy);
+	OnResizeControl(IDC_STATIC_T1, cx, cy);
+	OnResizeControl(IDC_DATETIMEPICKER1, cx, cy);
+	OnResizeControl(IDC_STATIC_T2, cx, cy);
+	OnResizeControl(IDC_DATETIMEPICKER2, cx, cy);
+	OnResizeControl(IDC_LIST_ADDORDER, cx, cy);
+	OnResizeControl(IDC_BUTTON_CALFARE, cx, cy);
+	OnResizeControl(IDC_LIST_FARELIST, cx, cy);
+	OnResizeControl(IDC_BUTTON_ADDITEM, cx, cy);
+	OnResizeControl(IDC_LIST_SHOWORDER, cx, cy);
+
+	m_FontStatic1.CreatePointFont((int)(65 * cx), _T("宋体"));
+	m_FontEdit1.CreateFont(22 * cy, 0, 0, 0, 35,
+		FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+		OUT_DEFAULT_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_ROMAN, "Arial");
+
+	GetDlgItem(IDC_EDIT_ORDERNAME)->SetFont(&m_FontEdit1);
+	GetDlgItem(IDC_BUTTON_QUERYCUST)->SetFont(&m_FontStatic1);
+	GetDlgItem(IDC_BUTTON_CALFARE)->SetFont(&m_FontStatic1);
+	GetDlgItem(IDC_BUTTON_ADDITEM)->SetFont(&m_FontStatic1);
+	GetDlgItem(IDC_DATETIMEPICKER1)->SetFont(&m_FontStatic1);
+	GetDlgItem(IDC_DATETIMEPICKER2)->SetFont(&m_FontStatic1);
 
 	// Create Table
-	m_TableAddCtrl.SetExtendedStyle(LVS_EX_GRIDLINES);
-	m_TableAddCtrl.MoveWindow(0, 50, (long)WINDOWWIDTH - 20, 30);
 
-	m_TableShowCtrl.SetExtendedStyle(LVS_EX_GRIDLINES);
-	m_TableShowCtrl.MoveWindow(0, 130, (long)WINDOWWIDTH - 20, WINDOWHEIGHT - MENUHEIGHT - STATUSHEIGHT);
+	// 1. Customers Information
+	m_TableCustInfo.SetExtendedStyle(LVS_EX_GRIDLINES);
+	CRect rectTab1;
+	GetDlgItem(IDC_LIST_CUSTOMER)->GetWindowRect(&rectTab1);
+	m_TableCustInfo.InsertColumn(0, "", LVCFMT_LEFT, rectTab1.Width()*0.3, 0);
+	m_TableCustInfo.InsertColumn(1, "", LVCFMT_LEFT, rectTab1.Width()*0.69, 0);
 	
-	int nColSize = sizeof(gszOrderTableColumnV) / sizeof(gszOrderTableColumnV[0]);
-	for (int nColIndex = 0; nColIndex < nColSize; ++nColIndex)
+	CFont   *pfont1 = m_TableCustInfo.GetFont();
+	pfont1->GetLogFont(&m_FontList1);
+	m_FontList1.lfWidth = m_FontList1.lfWidth * cx;
+	m_FontList1.lfHeight = m_FontList1.lfHeight * cy;
+	static   CFont   font1;
+	font1.CreateFontIndirect(&m_FontList1);
+	m_TableCustInfo.SetFont(&font1);
+	font1.Detach();
+
+	for (int i = 0; i < sizeof(gCustomerInfo) / sizeof(gCustomerInfo[0]); ++i)
 	{
-		m_TableShowCtrl.InsertColumn(nColIndex, gszOrderTableColumnV[nColIndex], LVCFMT_LEFT, 100);
-		m_TableAddCtrl.InsertColumn(nColIndex, gszOrderTableColumnV[nColIndex], LVCFMT_LEFT, 100);
+		int nRow = m_TableCustInfo.InsertItem(i, "");
+		m_TableCustInfo.SetItemText(nRow, 0, gCustomerInfo[i]);
 	}
-	int perWidth = WINDOWWIDTH / nColSize - 4;
-	int perHeight = 30;
+
+	// 2. Add item table
+	m_TableAddCtrl.SetExtendedStyle(LVS_EX_GRIDLINES);
+	GetDlgItem(IDC_LIST_ADDORDER)->GetWindowRect(&rectTab1);
+	int nEditColSize = sizeof(gAddListCol) / sizeof(gAddListCol[0]);
+	for (int i = 0; i < nEditColSize; ++i)
+	{
+		m_TableAddCtrl.InsertColumn(i, gAddListCol[i], LVCFMT_LEFT, rectTab1.Width() / nEditColSize - 1, 0);
+	}
+
+	pfont1 = m_TableAddCtrl.GetFont();
+	pfont1->GetLogFont(&m_FontList2);
+	m_FontList2.lfWidth = m_FontList2.lfWidth * cx;
+	m_FontList2.lfHeight = m_FontList2.lfHeight * cy;
+	static   CFont   font2;
+	font2.CreateFontIndirect(&m_FontList2);
+	m_TableAddCtrl.SetFont(&font2);
+	font1.Detach();
+
+	int perWidth = rectTab1.Width() / nEditColSize - 8;
+	int perHeight = rectTab1.Height() * 0.5;
 	CEdit *p_Edit;
-	for (int nColIndex = 0; nColIndex < nColSize; ++nColIndex)
+	for (int nColIndex = 0; nColIndex < 5; ++nColIndex)
 	{
 		p_Edit = new CEdit();
-		p_Edit->Create(WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER, CRect(2 + (perWidth + 4)*nColIndex, 80, 2 + (perWidth + 4)*nColIndex + perWidth, 75 + perHeight), this, 20001 + nColIndex);
-		p_Edit->SetWindowText(gszOrderTableRawDefaultV[nColIndex]);
-		p_mAddOrderEdits.Add((void*)p_Edit);
+		p_Edit->Create(WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER, CRect(0,0,0,0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + nColIndex);
+		p_Edit->MoveWindow(3 + (perWidth+6)*nColIndex, rectTab1.Height()*0.4 + 5, perWidth, perHeight);
+		p_Edit->SetWindowText("");
+		m_pAddOrderEdits.Add((void*)p_Edit);
+		p_Edit->SetFont(&m_FontEdit1);
 	}
+	m_PackingSizeCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 5);
+	m_PackingSizeCombo.MoveWindow(3 + (perWidth + 5) * 5, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	for (int i=0; i < sizeof(gPackingSize)/sizeof(gPackingSize[0]); ++i)
+	{
+		m_PackingSizeCombo.AddString(gPackingSize[i]);
+	}
+	m_PackingSizeCombo.SetCurSel(0);
+	m_PackingSizeCombo.SetFont(&m_FontEdit1);
+	
+	m_PackingWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN  | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 6);
+	m_PackingWayCombo.MoveWindow(3 + (perWidth + 6)*6, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	auto iterPack = CLMCommonVariable::Instance()->m_PackingWayMap.begin();
+	for (; iterPack != CLMCommonVariable::Instance()->m_PackingWayMap.end(); ++iterPack)
+	{
+		m_PackingWayCombo.AddString(CW2A((*iterPack).second.c_str()));
+	}
+	m_PackingWayCombo.SetCurSel(0);
+	m_PackingWayCombo.SetFont(&m_FontEdit1);
+
+	m_PayWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 7);
+	m_PayWayCombo.MoveWindow(3 + (perWidth + 6) * 7, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	auto iterPay = CLMCommonVariable::Instance()->m_PayWayMap.begin();
+	for (; iterPay != CLMCommonVariable::Instance()->m_PayWayMap.end(); ++iterPay)
+	{
+		m_PayWayCombo.AddString(CW2A((*iterPay).second.c_str()));
+	}
+	m_PayWayCombo.SetCurSel(0);
+	m_PayWayCombo.SetFont(&m_FontEdit1);
+
+	// 3. Fare table
+	m_TableFareCtrl.SetExtendedStyle(LVS_EX_GRIDLINES);
+	GetDlgItem(IDC_LIST_FARELIST)->GetWindowRect(&rectTab1);
+	nEditColSize = sizeof(gFareListCol) / sizeof(gFareListCol[0]);
+	for (int i = 0; i < nEditColSize; ++i)
+	{
+		m_TableFareCtrl.InsertColumn(i, gFareListCol[i], LVCFMT_LEFT, rectTab1.Width() / nEditColSize - 1, 0);
+	}
+
+	static   CFont   font3;
+	font3.CreateFontIndirect(&m_FontList2);
+	m_TableFareCtrl.SetFont(&font3);
+
+	int nRow = m_TableFareCtrl.InsertItem(0, "");
+	for (int i = 0; i < nEditColSize; ++i)
+	{
+		m_TableFareCtrl.SetItemText(nRow, i, "30");
+	}
+	
+	// 4. Show Order
+	m_TableShowOrder.SetExtendedStyle(LVS_EX_GRIDLINES);
+	GetDlgItem(IDC_LIST_SHOWORDER)->GetWindowRect(&rectTab1);
+	nEditColSize = sizeof(gOrderListCol) / sizeof(gOrderListCol[0]);
+	for (int i = 0; i < nEditColSize; ++i)
+	{
+		m_TableShowOrder.InsertColumn(i, gOrderListCol[i], LVCFMT_LEFT, rectTab1.Width() / nEditColSize - 1, 0);
+	}
+
+	pfont1 = m_TableShowOrder.GetFont();
+	pfont1->GetLogFont(&m_FontList4);
+	m_FontList4.lfWidth = m_FontList4.lfWidth * cx;
+	m_FontList4.lfHeight = m_FontList4.lfHeight * cy;
+	static   CFont   font4;
+	font4.CreateFontIndirect(&m_FontList4);
+	m_TableShowOrder.SetFont(&font4);
+	font1.Detach();
 
 	return FALSE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
 
-void CAddOrderPage::OnPaint()
+void CAddOrderPage::SetWorkingArea(CRect & rect)
 {
+	m_RectWorkingArea = rect;
+}
 
+
+void CAddOrderPage::OnResizeControl(int CtrlID, double cx, double cy)
+{
+	CWnd * pWnd;
+	pWnd = GetDlgItem(CtrlID);
+	if (pWnd != NULL)
+	{
+		CRect rect;
+		pWnd->GetWindowRect(&rect);
+		ScreenToClient(&rect);
+		rect.left = (int)(rect.left * cx);
+		rect.right = (int)(rect.right * cx);
+		rect.top = (int)(rect.top * cy);
+		rect.bottom = (int)(rect.bottom * cy);
+		pWnd->MoveWindow(rect);
+	}
+}
+
+HBRUSH CAddOrderPage::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	
+	// TODO:  在此更改 DC 的任何特性
+	if (nCtlColor == CTLCOLOR_STATIC )
+	{		
+		pDC->SelectObject(&m_FontStatic1);
+
+		return (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+	}
+
+	if (nCtlColor == CTLCOLOR_EDIT)
+	{
+		
+		return (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+	}
+
+	if (nCtlColor == CTLCOLOR_BTN)
+	{
+		return (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+	}
+
+	// TODO:  如果默认的不是所需画笔，则返回另一个画笔
+	return hbr;
+}
+
+
+double CAddOrderPage::CalculatePackingFare()
+{
+	int nPackSize = m_PackingSizeCombo.GetCurSel();
+	int nPackWay = m_PackingWayCombo.GetCurSel();
+
+	if (nPackWay == 3)
+	{
+		return 10;
+	}
+
+	double dStartF = 20 - 5 * nPackWay;
+	double dFinal = dStartF + 5 * nPackSize;
+	
+	return dFinal;
+}
+
+
+void CAddOrderPage::OnBnClickedButtonQuerycust()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString szCustomerID;
+	GetDlgItem(IDC_EDIT_ORDERNAME)->GetWindowText(szCustomerID);
+
+	std::vector<CString> szCusInfo;
+	BOOL bReply = CCustomerListTable::Instance()->QueryCustomerInfoByCustomerID(szCustomerID, szCusInfo);
+
+	if (!bReply || szCusInfo.size() == 0)
+	{
+		AfxMessageBox("未找到客户代码！");
+
+		return;
+	}
+
+	CString szCusName = szCusInfo[0];
+	CString szPhoneNum = szCusInfo[1];
+	CString szBalance = szCusInfo[5];
+
+	CString szStore;
+	for (auto iter = szCusInfo.begin(); iter != szCusInfo.end(); ++iter)
+	{
+		if (szCustomerID == *iter)
+		{
+			szStore = *(iter - 1);
+		}
+	}
+
+	m_TableCustInfo.SetItemText(0, 1, szCusName);
+	m_TableCustInfo.SetItemText(1, 1, szPhoneNum);
+	m_TableCustInfo.SetItemText(2, 1, szStore);
+	m_TableCustInfo.SetItemText(3, 1, szBalance);
+}
+
+void CAddOrderPage::OnBnClickedButtonCalfare()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CEdit* pEdit;
+	CString str;
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(0);
+	pEdit->GetWindowText(str);
+	CString szGoods = str;
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(1);
+	pEdit->GetWindowText(str);
+	int nQuantity = atoi(str);
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(2);
+	pEdit->GetWindowText(str);
+	double dWeight = atof(str);
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(3);
+	pEdit->GetWindowText(str);
+	double dVolume = atof(str);
+
+	int nPackWay = m_PackingWayCombo.GetCurSel();
+
+	double dDensity = dWeight / dVolume;
+
+	// Calculate Delivery Fare
+	double dDeliveryFare;
+	if (dDensity > CLMCommonVariable::Instance()->m_dWeightVolumeThres)
+	{
+		dDeliveryFare = dWeight * CLMCommonVariable::Instance()->m_dWeightPrice;
+	}
+	else
+	{
+		dDeliveryFare = dVolume * CLMCommonVariable::Instance()->m_dVolumePrice;
+	}
+
+	double dPackingFare = CalculatePackingFare();
+	double dInsuranceFare = 0;
+	double dTotalFare = dDeliveryFare + dPackingFare + dInsuranceFare;
+
+	m_TableFareCtrl.SetItemText(0, 0, std::to_string(dDensity).c_str());
+	m_TableFareCtrl.SetItemText(0, 1, std::to_string(dDeliveryFare).c_str());
+	m_TableFareCtrl.SetItemText(0, 2, std::to_string(dPackingFare).c_str());
+	m_TableFareCtrl.SetItemText(0, 3, std::to_string(dInsuranceFare).c_str());
+	m_TableFareCtrl.SetItemText(0, 4, std::to_string(dTotalFare).c_str());
+
+	UpdateWindow();
 }
 
 
 void CAddOrderPage::OnBnClickedButtonAddItem()
 {
 	// TODO: Add your control notification handler code here
-	int nCols = (int)p_mAddOrderEdits.GetCount();
+	CEdit* pEdit;
+	CString str;
 
-	int nRow = m_TableShowCtrl.InsertItem(0, "");
-	for (int nColIndex = 0; nColIndex < nCols; ++nColIndex)
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(0);
+	pEdit->GetWindowText(str);
+	CString szGoods = str;
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(1);
+	pEdit->GetWindowText(str);
+	int nQuantity = atoi(str);
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(2);
+	pEdit->GetWindowText(str);
+	double dWeight = atof(str);
+
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(3);
+	pEdit->GetWindowText(str);
+	double dVolume = atof(str);
+
+	int nPackWay = m_PackingWayCombo.GetCurSel();
+	std::wstring szPackWay = CLMCommonVariable::Instance()->m_PackingWayMap[nPackWay];
+
+	int nPayWay = m_PayWayCombo.GetCurSel();
+	std::wstring szPayWay = CLMCommonVariable::Instance()->m_PayWayMap[nPayWay];
+
+	double dDensity = atof(m_TableFareCtrl.GetItemText(0, 0));
+	double dDeliveryFare = atof(m_TableFareCtrl.GetItemText(0, 1));
+	double dPackingFare = atof(m_TableFareCtrl.GetItemText(0, 2));
+	double dInsuranceFare = atof(m_TableFareCtrl.GetItemText(0, 3));
+	double dTotalFare = atof(m_TableFareCtrl.GetItemText(0, 4));
+
+	str.ReleaseBuffer();
+
+	SYSTEMTIME st = { 0 };
+	GetLocalTime(&st);
+
+	CString szCusID;
+	GetDlgItem(IDC_EDIT_ORDERNAME)->GetWindowText(szCusID);
+
+	CString szOrderID;
+	szOrderID.Format("%02d%02d%02d_%s", st.wDay, st.wHour, st.wMinute, szCusID);
+
+	CTime time;
+	m_DateTimeRecive.GetTime(time);
+	CString szDayRecive = time.Format("%Y-%m-%d");
+
+	m_DateTimeDelivey.GetTime(time);
+	CString szDayDelivey = time.Format("%Y-%m-%d");
+
+	CString szCarrier;
+	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(4);
+	pEdit->GetWindowText(szCarrier);
+	
+	std::vector<CString> szOrderDataV;
+	szOrderDataV.push_back(szOrderID);
+	szOrderDataV.push_back(szDayRecive);
+	szOrderDataV.push_back(szDayDelivey);
+	szOrderDataV.push_back(szCarrier);
+	szOrderDataV.push_back(szCusID);
+	szOrderDataV.push_back(szGoods);
+	szOrderDataV.push_back(std::to_string(nQuantity).c_str());
+	szOrderDataV.push_back(std::to_string(dVolume).c_str());
+	szOrderDataV.push_back(ws2s(szPackWay).c_str());
+	szOrderDataV.push_back(std::to_string(dTotalFare).c_str());
+	szOrderDataV.push_back(ws2s(szPayWay).c_str());
+	szOrderDataV.push_back(m_TableCustInfo.GetItemText(2, 1));
+	szOrderDataV.push_back("订单生成");
+
+	int nTotalItem = m_TableShowOrder.GetItemCount();
+	int nRow = m_TableShowOrder.InsertItem(nTotalItem, "");
+	auto iterRowData = szOrderDataV.begin();
+	for (int i = 0; i < sizeof(gOrderListCol) / sizeof(gOrderListCol[0]); ++i)
 	{
-		CEdit* pEdit = (CEdit*)p_mAddOrderEdits.GetAt(nColIndex);
-		CString str;
-		pEdit->GetWindowText(str);
-
-		m_TableShowCtrl.SetItemText(nRow, nColIndex, str);
-
-		str.ReleaseBuffer();
+		m_TableShowOrder.SetItemText(nRow, i, *iterRowData);
+		++iterRowData;
 	}
+
+	CAllOrderTable::Instance()->AddOrder(szOrderDataV);
 
 	UpdateWindow();
-}
-
-
-
-
-void CAddOrderPage::OnBnClickedButtonAddorder()
-{
-	// TODO: Add your control notification handler code here
-	CString str;
-	GetDlgItem(IDC_EDIT_ORDERNAME)->GetWindowText(str);
-
-	if (str.IsEmpty())
-	{
-		AfxMessageBox("请输入订单名。。");
-
-		return;
-	}
-
-	if (m_TableShowCtrl.GetItemCount() == 0)
-	{
-		AfxMessageBox("该订单为空， 不能创建");
-
-		return;
-	}
-
-	SaveData();
-
-	//AfxMessageBox("订单已创建成功。");
-}
-
-
-void CAddOrderPage::SaveData()
-{
-	CString str;
-	GetDlgItem(IDC_EDIT_ORDERNAME)->GetWindowText(str);
-
-	::CreateDirectory("OrderTable", 0);
-
-	CString szFileName;
-	szFileName.Format(".\\OrderTable\\%s.txt", str);
-	std::ofstream outFile;
-	outFile.open(szFileName);
-
-	int nRows = m_TableShowCtrl.GetItemCount();
-	int nCols = sizeof(gszOrderTableColumnV) / sizeof(gszOrderTableColumnV[0]);
-	for (int i = 0; i < nRows;  i++)
-	{
-		for (int j = 0; j < nCols; j++)
-		{
-			outFile << m_TableShowCtrl.GetItemText(i, j) << "\t";
-		}
-		outFile << std::endl;
-	}
-	outFile.close();
 }
