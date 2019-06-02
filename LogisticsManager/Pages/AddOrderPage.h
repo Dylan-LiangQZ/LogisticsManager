@@ -40,15 +40,20 @@ protected:
 
 	CRect		m_RectWorkingArea;
 
+	CCriticalSection	m_TableCS;
+
 	virtual BOOL OnInitDialog();
 
 protected:
 	double CalculatePackingFare();
+	void	UpdateDayOrderTable();
 
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedButtonQuerycust();
 	afx_msg void OnBnClickedButtonAddItem();
 	afx_msg void OnBnClickedButtonCalfare();
+	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 	void OnResizeControl(int CtrlID, double cx, double cy);
 

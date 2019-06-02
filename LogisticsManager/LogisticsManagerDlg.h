@@ -53,6 +53,8 @@ protected:
 	CString		m_szDataBaseName;
 	int			m_nUserType;
 
+	HANDLE		m_BgExitHD;
+
 	BOOL CanExit();
 
 	// 生成的消息映射函数
@@ -67,6 +69,7 @@ protected:
 	// User define function
 	void LoadParameters();
 	void InitializeConfig();
+	static  unsigned int _stdcall StatusCheckThread(void *p);
 
 	afx_msg void OnMENUlogin();
 	afx_msg void OnBUTTONUser();

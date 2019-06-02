@@ -63,6 +63,8 @@ CLogisticsManagerDlg::CLogisticsManagerDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pAutoProxy = NULL;
+
+	m_BgExitHD = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 }
 
 CLogisticsManagerDlg::~CLogisticsManagerDlg()
@@ -73,10 +75,16 @@ CLogisticsManagerDlg::~CLogisticsManagerDlg()
 	if (m_pAutoProxy != NULL)
 		m_pAutoProxy->m_pDialog = NULL;
 
+	::SetEvent(m_BgExitHD);
+
 	delete m_pUserManagePage;
 	delete m_pAddOrderPage;
 	delete m_pQueryOrderPage;
 	delete m_pCSummaryPage;
+
+	Sleep(1000);
+
+	::CloseHandle(m_BgExitHD);
 }
 
 void CLogisticsManagerDlg::DoDataExchange(CDataExchange* pDX)
@@ -132,7 +140,8 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	LoadParameters();
 	
 	// Init DataBase
-	CDBConn::Instance()->InitDataBase(m_szDataBaseName);
+	//_beginthreadex(NULL, 0, StatusCheckThread, this, 0, NULL);
+	BOOL bReply = CDBConn::Instance()->InitDataBase(m_szDataBaseName);
 	CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
 
 	//std::vector<CString> szTableColV1;
@@ -172,7 +181,7 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	m_Statusbar.SetPaneInfo(0, Array[0], 0, nCurScreenWidth*0.2);
 	m_Statusbar.SetPaneInfo(1, Array[1], 0, nCurScreenWidth*0.3);
 	m_Statusbar.SetPaneInfo(2, Array[2], 0, nCurScreenWidth*0.5);
-	m_Statusbar.SetPaneText(0, "  物流订单管理系统");
+	m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：未连接");
 	m_Statusbar.SetPaneText(1, "  用户：请登录");
 	m_Statusbar.SetPaneText(2, "  当前时间 : " + Str);
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
@@ -422,6 +431,34 @@ void CLogisticsManagerDlg::InitializeConfig()
 		break;
 	}
 
+}
+
+
+unsigned int _stdcall CLogisticsManagerDlg::StatusCheckThread(void *p)
+{
+	CLogisticsManagerDlg* pthis = (CLogisticsManagerDlg*)p;
+	while (true)
+	{
+		BOOL bReply = CDBConn::Instance()->InitDataBase(pthis->m_szDataBaseName);
+		CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
+
+		if (!bReply)
+		{
+			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：连接失败");
+		}
+		else
+		{
+			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：已连接");
+		}
+
+		DWORD dwReply = ::WaitForSingleObject(pthis->m_BgExitHD,1000);
+		if (dwReply == WAIT_OBJECT_0)
+		{
+			break;
+		}	
+	}
+
+	return 0;
 }
 
 

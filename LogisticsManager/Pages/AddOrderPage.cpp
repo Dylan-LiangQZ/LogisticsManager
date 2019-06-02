@@ -12,6 +12,8 @@
 
 // CAddOrderPage dialog
 
+#define SYN_TIMER_ID 1
+
 static const CString gCustomerInfo[] =
 {
 	_T("客户姓名 :"),
@@ -83,6 +85,8 @@ BEGIN_MESSAGE_MAP(CAddOrderPage, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_ADDITEM, &CAddOrderPage::OnBnClickedButtonAddItem)
 	ON_BN_CLICKED(IDC_BUTTON_CALFARE, &CAddOrderPage::OnBnClickedButtonCalfare)
 	ON_BN_CLICKED(IDC_BUTTON_QUERYCUST, &CAddOrderPage::OnBnClickedButtonQuerycust)
+	ON_WM_SHOWWINDOW()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -342,6 +346,35 @@ double CAddOrderPage::CalculatePackingFare()
 }
 
 
+void CAddOrderPage::UpdateDayOrderTable()
+{
+	SYSTEMTIME st = { 0 };
+	GetLocalTime(&st);
+	CString szDay;
+	szDay.Format("%04d-%02d-%02d", st.wYear, st.wMonth, st.wDay);
+
+	std::vector<std::vector<CString>> szTableDataVV;
+	BOOL bReply = CAllOrderTable::Instance()->QueryOrderByDay(szDay, szTableDataVV);
+	
+	if (bReply)
+	{
+		m_TableCS.Lock();
+		m_TableShowOrder.DeleteAllItems();
+		for (auto iterData = szTableDataVV.begin(); iterData != szTableDataVV.end(); ++iterData)
+		{
+			int nRow = m_TableShowOrder.InsertItem(0, "");
+			auto iterRowData = (*iterData).begin();
+			for (int i = 0; i < (*iterData).size(); ++i, ++iterRowData)
+			{
+				m_TableShowOrder.SetItemText(nRow, i, *iterRowData);
+			}
+		}
+		m_TableCS.Unlock();
+	}
+
+}
+
+
 void CAddOrderPage::OnBnClickedButtonQuerycust()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -499,6 +532,7 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 	szOrderDataV.push_back(m_TableCustInfo.GetItemText(2, 1));
 	szOrderDataV.push_back("订单生成");
 
+	m_TableCS.Lock();
 	int nTotalItem = m_TableShowOrder.GetItemCount();
 	int nRow = m_TableShowOrder.InsertItem(nTotalItem, "");
 	auto iterRowData = szOrderDataV.begin();
@@ -507,8 +541,47 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 		m_TableShowOrder.SetItemText(nRow, i, *iterRowData);
 		++iterRowData;
 	}
+	m_TableCS.Unlock();
 
 	CAllOrderTable::Instance()->AddOrder(szOrderDataV);
 
 	UpdateWindow();
+}
+
+
+void CAddOrderPage::OnShowWindow(BOOL bShow, UINT nStatus)
+{
+	CDialogEx::OnShowWindow(bShow, nStatus);
+
+	// TODO: 在此处添加消息处理程序代码
+	if (bShow)
+	{
+		SetTimer(SYN_TIMER_ID, 5000, NULL);
+	} 
+	else
+	{
+		KillTimer(SYN_TIMER_ID);
+	}
+
+}
+
+
+void CAddOrderPage::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+
+	CDialogEx::OnTimer(nIDEvent);
+
+	switch (nIDEvent)
+	{
+	case SYN_TIMER_ID:
+	{
+		UpdateDayOrderTable();
+	}
+	break;
+	default:
+		break;
+	}
+		
+
 }

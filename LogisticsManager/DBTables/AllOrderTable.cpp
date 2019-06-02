@@ -67,7 +67,7 @@ BOOL CAllOrderTable::QueryOrderByOrderID(const CString szOrderID, std::vector<CS
 	szSQLCmd.Format("SELECT * FROM [%s] WHERE OrderID = '%s'", m_szTableName, szOrderID);
 
 	_RecordsetPtr pRecordset;
-	bReply = CDBConn::Instance()->SQLCommandQuery(m_szTableName, szSQLCmd, pRecordset);
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
 
 	if (!bReply)
 	{
@@ -99,7 +99,7 @@ BOOL CAllOrderTable::QueryOrderByCustomerID(const CString szCustomerID, std::vec
 	szSQLCmd.Format("SELECT * FROM [%s] WHERE CustomerID = '%s'", m_szTableName, szCustomerID);
 
 	_RecordsetPtr pRecordset;
-	bReply = CDBConn::Instance()->SQLCommandQuery(m_szTableName, szSQLCmd, pRecordset);
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
 
 	if (!bReply)
 	{
@@ -134,7 +134,7 @@ BOOL CAllOrderTable::QueryOrderByDay(const CString szDay, std::vector<std::vecto
 	szSQLCmd.Format("SELECT * FROM [%s] WHERE ReceiveDate = '%s'", m_szTableName, szDay);
 
 	_RecordsetPtr pRecordset;
-	bReply = CDBConn::Instance()->SQLCommandQuery(m_szTableName, szSQLCmd, pRecordset);
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
 
 	if (!bReply)
 	{
@@ -169,7 +169,7 @@ BOOL CAllOrderTable::QueryOrderByCusIDNDay(const CString szCustomerID, const CSt
 	szSQLCmd.Format("SELECT * FROM [%s] WHERE ReceiveDate = '%s' AND CustomerID = '%s'", m_szTableName, szDay, szCustomerID);
 
 	_RecordsetPtr pRecordset;
-	bReply = CDBConn::Instance()->SQLCommandQuery(m_szTableName, szSQLCmd, pRecordset);
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
 
 	if (!bReply)
 	{

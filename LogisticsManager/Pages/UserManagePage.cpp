@@ -40,6 +40,15 @@ BOOL CUserManagePage::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化
 	CCustomerListTable::Instance()->CreateTable();
+	CustomerAccountTable::Instance()->CreateTable();
+
+	std::vector<CString> szV;
+	szV.push_back("12345");
+	szV.push_back("2019-06-02");
+	szV.push_back("+1000");
+	szV.push_back("0");
+	szV.push_back("1000");
+	CustomerAccountTable::Instance()->AddCustomerAccountRecord("12345", szV);
 
 	CRect rectDlg;
 	GetClientRect(rectDlg);
