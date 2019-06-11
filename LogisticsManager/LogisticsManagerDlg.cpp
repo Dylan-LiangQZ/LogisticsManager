@@ -7,6 +7,7 @@
 #include "LogisticsManagerDlg.h"
 #include "DlgProxy.h"
 #include "afxdialogex.h"
+#include <crtdbg.h>
 
 #include "pages\LoginDlg.h"
 
@@ -83,6 +84,8 @@ CLogisticsManagerDlg::~CLogisticsManagerDlg()
 	delete m_pCSummaryPage;
 
 	Sleep(1000);
+
+	_CrtDumpMemoryLeaks();
 
 	::CloseHandle(m_BgExitHD);
 }
