@@ -1,2 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<System Language="0" UserType="0"></System>
+<System Language="0" UserType="0" DataBaseName="DinaCargo">
+  <PackingWay>
+    <手工 />
+    <袋胶 />
+    <胶 />
+    <纤 />
+  </PackingWay>
+  <PayWay>
+    <代付>0</代付>
+    <扣帐>1</扣帐>
+    <现金>2</现金>
+    <月结>3</月结>
+    <微信>4</微信>
+    <支付包>5</支付包>
+  </PayWay>
+</System>

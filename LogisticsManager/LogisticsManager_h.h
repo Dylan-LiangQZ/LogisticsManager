@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Sun Apr 21 15:51:55 2019
+/* at Wed Jun 05 15:20:32 2019
  */
 /* Compiler settings for LogisticsManager.idl:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.00.0603 
