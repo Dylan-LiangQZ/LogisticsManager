@@ -449,7 +449,7 @@ unsigned int _stdcall CLogisticsManagerDlg::StatusCheckThread(void *p)
 
 		if (!bReply)
 		{
-			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：连接失败");
+			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：连接失败!");
 		}
 		else
 		{
