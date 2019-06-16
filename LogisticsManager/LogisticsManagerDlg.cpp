@@ -191,6 +191,8 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 
 	InitializeConfig();
 
+
+
 	// Add pages
 	CRect rectStatusBar;
 	m_Statusbar.GetClientRect(rectStatusBar);
