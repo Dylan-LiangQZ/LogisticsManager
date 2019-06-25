@@ -193,3 +193,19 @@ BOOL CAllOrderTable::QueryOrderByCusIDNDay(const CString szCustomerID, const CSt
 
 	return bReply;
 }
+
+
+BOOL CAllOrderTable::AlterOrderItem(const CString szOrderID, const CString szColName, const CString szValue)
+{
+	BOOL bReply = FALSE;
+
+	CString szSQLCmd;
+	szSQLCmd.Format("UPDATE [%s] SET %s = '%s'", m_szTableName, szColName, szValue);
+	CString szCondtion;
+	szCondtion.Format(" WHERE OrderID = '%s'", szOrderID);
+	szSQLCmd += szCondtion;
+
+	bReply = CDBConn::Instance()->SQLCommandExecute(szSQLCmd);
+
+	return FALSE;
+}

@@ -10,12 +10,14 @@ public:
 	BOOL CreateTable();
 	BOOL AddCustomerInfo(const std::vector<CString>& szCustomerInfoV);
 
+	BOOL QueryAllCustomerInfo(std::vector<std::vector<CString>>& szAllCustomerInfoVV);
 	BOOL QueryCustomerInfoByCustomerID(const CString szCustomerID, std::vector<CString>& szCustomerInfoV);
 	BOOL QueryCustomerInfoByCustomerName(const CString szCustomerName, std::vector<CString>& szCustomerInfoV);
 	BOOL QueryCustomerInfoByPhone(const CString szPhoneNum, std::vector<CString>& szCustomerInfoV);
 
 	BOOL AlterCustomerInfoByQueryPhone(const CString szPhoneNum, const std::vector<CString>& szCustomerInfoV);
-	
+	BOOL AlterCustomerInfoItem(const CString szPhoneNum, const CString szColName, const CString szValue);
+
 protected:
 	CCustomerListTable();
 	~CCustomerListTable();
@@ -34,6 +36,7 @@ public:
 	BOOL CreateTable();
 
 	BOOL AddCustomerAccountRecord(const CString szPhoneNumber, const std::vector<CString>& szAccountRecordV);
+	BOOL QueryCustomerAccountRecord(const CString szPhoneNumber, std::vector<std::vector<CString>>& szAccountRecordV);
 
 protected:
 	CustomerAccountTable();

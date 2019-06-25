@@ -22,6 +22,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
+	// GUI
 	CFont		m_FontStatic1;
 	CFont		m_FontEdit1; 
 	LOGFONT		m_FontList1;
@@ -41,6 +42,9 @@ protected:
 	CRect		m_RectWorkingArea;
 
 	CCriticalSection	m_TableCS;
+
+	// member 
+	std::vector<CString> m_szCurrInfo;;
 
 	virtual BOOL OnInitDialog();
 

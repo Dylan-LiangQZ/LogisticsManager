@@ -173,17 +173,18 @@ COPY "$(Libraries)\CommonLibrary\$(Platform)\$(ConfigurationName)\CommonLibrary.
   <ItemGroup>
     <ClInclude Include="DBTables\AllOrderTable.h" />
     <ClInclude Include="DBTables\CustomerTable.h" />
+    <ClInclude Include="DBTables\EnterGoodsTable.h" />
     <ClInclude Include="DlgProxy.h" />
     <ClInclude Include="GUIElement\TableControl.h" />
     <ClInclude Include="LMCommonVariable.h" />
     <ClInclude Include="LogisticsManager.h" />
     <ClInclude Include="LogisticsManagerDlg.h" />
     <ClInclude Include="Pages\AddOrderPage.h" />
+    <ClInclude Include="Pages\EnterStorePage.h" />
     <ClInclude Include="Pages\LoginDlg.h" />
     <ClInclude Include="Pages\QueryOrderPage.h" />
     <ClInclude Include="Pages\SummaryPage.h" />
     <ClInclude Include="Pages\UserManageCreatePage.h" />
-    <ClInclude Include="Pages\UserManageEditPage.h" />
     <ClInclude Include="Pages\UserManagePage.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -192,17 +193,18 @@ COPY "$(Libraries)\CommonLibrary\$(Platform)\$(ConfigurationName)\CommonLibrary.
   <ItemGroup>
     <ClCompile Include="DBTables\AllOrderTable.cpp" />
     <ClCompile Include="DBTables\CustomerTable.cpp" />
+    <ClCompile Include="DBTables\EnterGoodsTable.cpp" />
     <ClCompile Include="DlgProxy.cpp" />
     <ClCompile Include="GUIElement\TableControl.cpp" />
     <ClCompile Include="LMCommonVariable.cpp" />
     <ClCompile Include="LogisticsManager.cpp" />
     <ClCompile Include="LogisticsManagerDlg.cpp" />
     <ClCompile Include="Pages\AddOrderPage.cpp" />
+    <ClCompile Include="Pages\EnterStorePage.cpp" />
     <ClCompile Include="Pages\LoginDlg.cpp" />
     <ClCompile Include="Pages\QueryOrderPage.cpp" />
     <ClCompile Include="Pages\SummaryPage.cpp" />
     <ClCompile Include="Pages\UserManageCreatePage.cpp" />
-    <ClCompile Include="Pages\UserManageEditPage.cpp" />
     <ClCompile Include="Pages\UserManagePage.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -222,7 +224,11 @@ COPY "$(Libraries)\CommonLibrary\$(Platform)\$(ConfigurationName)\CommonLibrary.
   <ItemGroup>
     <Image Include="res\Add.bmp" />
     <Image Include="res\Add.ico" />
+    <Image Include="res\EnterGoods.ico" />
+    <Image Include="res\Goods.ico" />
     <Image Include="res\icon1.ico" />
+    <Image Include="res\icon3.ico" />
+    <Image Include="res\icon4.ico" />
     <Image Include="res\LogisticsManager.ico" />
     <Image Include="res\Query.bmp" />
     <Image Include="res\Query.ico" />

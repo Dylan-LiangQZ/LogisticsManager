@@ -8,6 +8,7 @@
 #include "Pages\AddOrderPage.h"
 #include "Pages\QueryOrderPage.h"
 #include "Pages\SummaryPage.h"
+#include "Pages\EnterStorePage.h"
 
 #pragma once
 
@@ -45,6 +46,7 @@ protected:
 	CAddOrderPage*			m_pAddOrderPage;
 	CQueryOrderPage*		m_pQueryOrderPage;
 	CSummaryPage*			m_pCSummaryPage;
+	CEnterStorePage*		m_pEnterStorePage;
 
 	CImageList	m_Imagelist;
 	CStatusBar	m_Statusbar;
@@ -73,9 +75,13 @@ protected:
 
 	afx_msg void OnMENUlogin();
 	afx_msg void OnBUTTONUser();
+	afx_msg void OnBUTTONGOODS();
 	afx_msg void OnBUTTONAddOrder();
 	afx_msg void OnBUTTONQueryOrder();
 	afx_msg void OnBUTTONSummary();
+
+	afx_msg LRESULT InternetStatusChanged(WPARAM wp, LPARAM lp);
+	afx_msg LRESULT DatabaseStatusChanged(WPARAM wp, LPARAM lp);
 
 	DECLARE_MESSAGE_MAP()
 

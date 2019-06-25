@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include "..\DBTables\AllOrderTable.h"
+#include "..\DBTables\CustomerTable.h"
 #include "..\LMCommonVariable.h"
 
 using namespace std;
@@ -41,6 +42,8 @@ void CQueryOrderPage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CQueryOrderPage, CDialogEx)
 	
 	ON_BN_CLICKED(ID_QueryOrder, &CQueryOrderPage::OnBnClickedQueryorder)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_QUERYORDER, &CQueryOrderPage::OnNMDblclkListQueryorder)
+	ON_BN_CLICKED(ID_SaveOrder, &CQueryOrderPage::OnBnClickedSaveorder)
 END_MESSAGE_MAP()
 
 
@@ -74,7 +77,7 @@ BOOL CQueryOrderPage::OnInitDialog()
 	OnResizeControl(IDC_LIST_QUERYORDER, cx, cy);
 	
 	m_FontStatic1.CreatePointFont((int)(65 * cx), _T("宋体"));
-	m_FontEdit1.CreateFont(22 * cy, 0, 0, 0, 35,
+	m_FontEdit1.CreateFont(20 * cy, 0, 0, 0, 25,
 		FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
 		OUT_DEFAULT_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_ROMAN, "Arial");
 
@@ -88,7 +91,8 @@ BOOL CQueryOrderPage::OnInitDialog()
 	GetDlgItem(ID_SaveOrder)->SetFont(&m_FontStatic1);
 
 	CRect rectTab1;
-	m_TableShowCtrl.SetExtendedStyle(LVS_EX_GRIDLINES);
+	m_TableShowCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_TWOCLICKACTIVATE
+		| LVS_EX_UNDERLINEHOT | LVS_EX_FULLROWSELECT);
 	GetDlgItem(IDC_LIST_QUERYORDER)->GetWindowRect(&rectTab1);
 	int nEditColSize = sizeof(gOrderListCol) / sizeof(gOrderListCol[0]);
 	for (int i = 0; i < nEditColSize; ++i)
@@ -104,6 +108,10 @@ BOOL CQueryOrderPage::OnInitDialog()
 	font.CreateFontIndirect(&m_FontList1);
 	m_TableShowCtrl.SetFont(&font);
 	font.Detach();
+
+	m_Edit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_QUERYORDER), 30001);
+	m_Edit.SetFont(&m_FontEdit1);
+	m_Edit.ShowWindow(SW_HIDE);
 
 	COleDateTime oletimeTime = COleDateTime::GetCurrentTime();
 	oletimeTime.SetStatus(COleDateTime::null);
@@ -247,4 +255,89 @@ void CQueryOrderPage::OnBnClickedQueryorder()
 			return;
 		}
 	}
+}
+
+
+void CQueryOrderPage::OnNMDblclkListQueryorder(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NM_LISTVIEW* pNMItemActivate = reinterpret_cast<NM_LISTVIEW*>(pNMHDR);
+	
+	CRect rc;
+	m_nRow = pNMItemActivate->iItem;
+	m_nCol = pNMItemActivate->iSubItem;
+
+	if (pNMItemActivate->iSubItem != 0 && m_nCol == 9) //如果选择的是子项;
+	{
+		m_TableShowCtrl.GetSubItemRect(m_nRow, m_nCol, LVIR_LABEL, rc);
+		m_Edit.SetParent(&m_TableShowCtrl);
+		m_Edit.MoveWindow(rc);
+		m_Edit.SetWindowText(m_TableShowCtrl.GetItemText(m_nRow, m_nCol));
+		m_Edit.ShowWindow(SW_SHOW);
+		m_Edit.SetFocus();
+		m_Edit.ShowCaret();
+		m_Edit.SetSel(-1);
+	}
+
+	*pResult = 0;
+}
+
+
+void CQueryOrderPage::OnBnClickedSaveorder()
+{
+	if (!m_Edit.IsWindowVisible())
+	{
+		return;
+	}
+	
+	CString szOldItem = m_TableShowCtrl.GetItemText(m_nRow, m_nCol);
+
+	CString szNewItem;
+	m_Edit.GetWindowText(szNewItem);
+
+	m_TableShowCtrl.SetItemText(m_nRow, m_nCol, szNewItem);
+	m_Edit.ShowWindow(SW_HIDE);
+
+	if (szNewItem == szOldItem)
+	{
+		return;
+	}
+
+	CString szCusID = m_TableShowCtrl.GetItemText(m_nRow, 4);
+	CString szPhone = CLMCommonVariable::Instance()->m_CusIDnPhoneMap[szCusID];
+
+	CString szOrderID = m_TableShowCtrl.GetItemText(m_nRow, 0);
+	CAllOrderTable::Instance()->AlterOrderItem(szOrderID, "Fare", szNewItem);
+
+	double dBalanceChange = atof(szOldItem) - atof(szNewItem);
+
+	CString szAdd, szSub;
+	if (dBalanceChange < 0)
+	{
+		szAdd = "0";
+		szSub = std::to_string(dBalanceChange).c_str();
+	}
+	else
+	{
+		szAdd = std::to_string(dBalanceChange).c_str();
+		szSub = "0";
+	}
+
+	SYSTEMTIME st = { 0 };
+	GetLocalTime(&st);
+	CString szDay;
+	szDay.Format("%04d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	std::vector<CString> szCusInfo;
+	BOOL bReply = CCustomerListTable::Instance()->QueryCustomerInfoByPhone(szPhone, szCusInfo);
+
+	std::vector<CString> szAccountDataV;
+	szAccountDataV.push_back(szPhone);
+	szAccountDataV.push_back(szDay);
+	szAccountDataV.push_back(szAdd);
+	szAccountDataV.push_back(szSub);
+	CString szBalance = std::to_string(atof(szCusInfo[4]) + dBalanceChange).c_str();
+	szAccountDataV.push_back(szBalance);
+	CustomerAccountTable::Instance()->AddCustomerAccountRecord(szPhone, szAccountDataV);
+
+	CCustomerListTable::Instance()->AlterCustomerInfoItem(szPhone, "Balance", szBalance);
 }

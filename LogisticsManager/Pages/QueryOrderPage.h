@@ -26,6 +26,10 @@ public:
 	std::vector<CString>	m_szFileNameV;
 	std::set<CString>	m_szFileNameSet;
 
+	CEdit		m_Edit;
+	int			m_nRow;
+	int			m_nCol;
+
 protected:
 	DECLARE_MESSAGE_MAP()
 
@@ -40,4 +44,6 @@ public:
 	afx_msg void OnBnClickedQueryorder();
 
 	void SetWorkingArea(CRect & rect);	
+	afx_msg void OnNMDblclkListQueryorder(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedSaveorder();
 };

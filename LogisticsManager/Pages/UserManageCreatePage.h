@@ -1,6 +1,5 @@
 #pragma once
 
-
 // CUserManageCreatePage dialog
 
 class CUserManageCreatePage : public CDialogEx
@@ -12,15 +11,15 @@ public:
 	virtual ~CUserManageCreatePage();
 
 // Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_DIALOG_USERMANAGE_CREATE };
-#endif
+	enum {
+		IDD = IDD_DIALOG_USERMANAGE_CREATE
+	};
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedButton1();
-
+	afx_msg void OnBnClickedButton_Create();
+	afx_msg void OnBnClickedButtonCanclecreate();
 };

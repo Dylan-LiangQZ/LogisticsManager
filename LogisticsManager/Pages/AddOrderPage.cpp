@@ -27,7 +27,9 @@ static const CString gAddListCol[] =
 	_T("商品"),
 	_T("件数"),
 	_T("重量"),
-	_T("体积"),
+	_T("长"),
+	_T("宽"),
+	_T("高"),
 	_T("承运商"),
 	_T("包装规格"),
 	_T("包装方式"),
@@ -100,22 +102,6 @@ BOOL CAddOrderPage::OnInitDialog()
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
 	CAllOrderTable::Instance()->CreateTable();
-	//std::vector<CString> szTableRowDataV;
-	//szTableRowDataV.push_back("Zeyu");
-	//szTableRowDataV.push_back("91096118");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("qz@163.com");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("100");
-	//szTableRowDataV.push_back("乌鲁木齐");
-	//szTableRowDataV.push_back("ZY_WLMQ");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("");
-	//szTableRowDataV.push_back("");
-	//CCustomerListTable::Instance()->AddCustomerInfo(szTableRowDataV);
 
 	// 控件布局设计
 	CRect rectDlg;
@@ -142,7 +128,7 @@ BOOL CAddOrderPage::OnInitDialog()
 	OnResizeControl(IDC_LIST_SHOWORDER, cx, cy);
 
 	m_FontStatic1.CreatePointFont((int)(65 * cx), _T("宋体"));
-	m_FontEdit1.CreateFont(22 * cy, 0, 0, 0, 35,
+	m_FontEdit1.CreateFont(20 * cy, 0, 0, 0, 30,
 		FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
 		OUT_DEFAULT_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_ROMAN, "Arial");
 
@@ -198,7 +184,7 @@ BOOL CAddOrderPage::OnInitDialog()
 	int perWidth = rectTab1.Width() / nEditColSize - 8;
 	int perHeight = rectTab1.Height() * 0.5;
 	CEdit *p_Edit;
-	for (int nColIndex = 0; nColIndex < 5; ++nColIndex)
+	for (int nColIndex = 0; nColIndex < 7; ++nColIndex)
 	{
 		p_Edit = new CEdit();
 		p_Edit->Create(WS_CHILD | WS_VISIBLE | WS_BORDER | SS_CENTER, CRect(0,0,0,0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + nColIndex);
@@ -207,8 +193,8 @@ BOOL CAddOrderPage::OnInitDialog()
 		m_pAddOrderEdits.Add((void*)p_Edit);
 		p_Edit->SetFont(&m_FontEdit1);
 	}
-	m_PackingSizeCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 5);
-	m_PackingSizeCombo.MoveWindow(3 + (perWidth + 5) * 5, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	m_PackingSizeCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 7);
+	m_PackingSizeCombo.MoveWindow(3 + (perWidth + 6) * 7, rectTab1.Height()*0.4 + 5, perWidth + 5, perHeight + 200);
 	for (int i=0; i < sizeof(gPackingSize)/sizeof(gPackingSize[0]); ++i)
 	{
 		m_PackingSizeCombo.AddString(gPackingSize[i]);
@@ -216,8 +202,8 @@ BOOL CAddOrderPage::OnInitDialog()
 	m_PackingSizeCombo.SetCurSel(0);
 	m_PackingSizeCombo.SetFont(&m_FontEdit1);
 	
-	m_PackingWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN  | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 6);
-	m_PackingWayCombo.MoveWindow(3 + (perWidth + 6)*6, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	m_PackingWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN  | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 8);
+	m_PackingWayCombo.MoveWindow(3 + (perWidth + 6)*8, rectTab1.Height()*0.4 + 5, perWidth + 5, perHeight + 200);
 	auto iterPack = CLMCommonVariable::Instance()->m_PackingWayMap.begin();
 	for (; iterPack != CLMCommonVariable::Instance()->m_PackingWayMap.end(); ++iterPack)
 	{
@@ -226,8 +212,8 @@ BOOL CAddOrderPage::OnInitDialog()
 	m_PackingWayCombo.SetCurSel(0);
 	m_PackingWayCombo.SetFont(&m_FontEdit1);
 
-	m_PayWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 7);
-	m_PayWayCombo.MoveWindow(3 + (perWidth + 6) * 7, rectTab1.Height()*0.4 + 5, perWidth, perHeight + 200);
+	m_PayWayCombo.Create(WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_HASSTRINGS | WS_VSCROLL, CRect(0, 0, 0, 0), GetDlgItem(IDC_LIST_ADDORDER), 20001 + 9);
+	m_PayWayCombo.MoveWindow(3 + (perWidth + 6) * 9, rectTab1.Height()*0.4 + 5, perWidth + 10, perHeight + 200);
 	auto iterPay = CLMCommonVariable::Instance()->m_PayWayMap.begin();
 	for (; iterPay != CLMCommonVariable::Instance()->m_PayWayMap.end(); ++iterPay)
 	{
@@ -252,7 +238,7 @@ BOOL CAddOrderPage::OnInitDialog()
 	int nRow = m_TableFareCtrl.InsertItem(0, "");
 	for (int i = 0; i < nEditColSize; ++i)
 	{
-		m_TableFareCtrl.SetItemText(nRow, i, "30");
+		m_TableFareCtrl.SetItemText(nRow, i, "0");
 	}
 	
 	// 4. Show Order
@@ -393,7 +379,7 @@ void CAddOrderPage::OnBnClickedButtonQuerycust()
 
 	CString szCusName = szCusInfo[0];
 	CString szPhoneNum = szCusInfo[1];
-	CString szBalance = szCusInfo[5];
+	CString szBalance = szCusInfo[4];
 
 	CString szStore;
 	for (auto iter = szCusInfo.begin(); iter != szCusInfo.end(); ++iter)
@@ -408,6 +394,8 @@ void CAddOrderPage::OnBnClickedButtonQuerycust()
 	m_TableCustInfo.SetItemText(1, 1, szPhoneNum);
 	m_TableCustInfo.SetItemText(2, 1, szStore);
 	m_TableCustInfo.SetItemText(3, 1, szBalance);
+
+	m_szCurrInfo = szCusInfo;
 }
 
 void CAddOrderPage::OnBnClickedButtonCalfare()
@@ -428,9 +416,11 @@ void CAddOrderPage::OnBnClickedButtonCalfare()
 	pEdit->GetWindowText(str);
 	double dWeight = atof(str);
 
-	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(3);
-	pEdit->GetWindowText(str);
-	double dVolume = atof(str);
+	CString szLen, szWidth, szHeight;
+	((CEdit*)m_pAddOrderEdits.GetAt(3))->GetWindowText(szLen);
+	((CEdit*)m_pAddOrderEdits.GetAt(4))->GetWindowText(szWidth);
+	((CEdit*)m_pAddOrderEdits.GetAt(5))->GetWindowText(szHeight);
+	double dVolume = atof(szLen) * atof(szWidth) * atof(szHeight);
 
 	int nPackWay = m_PackingWayCombo.GetCurSel();
 
@@ -464,6 +454,16 @@ void CAddOrderPage::OnBnClickedButtonCalfare()
 void CAddOrderPage::OnBnClickedButtonAddItem()
 {
 	// TODO: Add your control notification handler code here
+	if (m_szCurrInfo.empty())
+	{
+		return;
+	}
+
+	SYSTEMTIME st = { 0 };
+	GetLocalTime(&st);
+	CString szDay;
+	szDay.Format("%04d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
 	CEdit* pEdit;
 	CString str;
 
@@ -479,9 +479,11 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 	pEdit->GetWindowText(str);
 	double dWeight = atof(str);
 
-	pEdit = (CEdit*)m_pAddOrderEdits.GetAt(3);
-	pEdit->GetWindowText(str);
-	double dVolume = atof(str);
+	CString szLen, szWidth, szHeight;
+	((CEdit*)m_pAddOrderEdits.GetAt(3))->GetWindowText(szLen);
+	((CEdit*)m_pAddOrderEdits.GetAt(4))->GetWindowText(szWidth);
+	((CEdit*)m_pAddOrderEdits.GetAt(5))->GetWindowText(szHeight);
+	double dVolume = atof(szLen) * atof(szWidth) * atof(szHeight);
 
 	int nPackWay = m_PackingWayCombo.GetCurSel();
 	std::wstring szPackWay = CLMCommonVariable::Instance()->m_PackingWayMap[nPackWay];
@@ -497,14 +499,10 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 
 	str.ReleaseBuffer();
 
-	SYSTEMTIME st = { 0 };
-	GetLocalTime(&st);
-
 	CString szCusID;
 	GetDlgItem(IDC_EDIT_ORDERNAME)->GetWindowText(szCusID);
 
-	CString szOrderID;
-	szOrderID.Format("%02d%02d%02d_%s", st.wDay, st.wHour, st.wMinute, szCusID);
+	CString szOrderID = szDay + szCusID;
 
 	CTime time;
 	m_DateTimeRecive.GetTime(time);
@@ -527,7 +525,9 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 	szOrderDataV.push_back(std::to_string(nQuantity).c_str());
 	szOrderDataV.push_back(std::to_string(dVolume).c_str());
 	szOrderDataV.push_back(ws2s(szPackWay).c_str());
-	szOrderDataV.push_back(std::to_string(dTotalFare).c_str());
+	CString szTotalFare;
+	szTotalFare.Format("%.1f", dTotalFare);
+	szOrderDataV.push_back(szTotalFare);
 	szOrderDataV.push_back(ws2s(szPayWay).c_str());
 	szOrderDataV.push_back(m_TableCustInfo.GetItemText(2, 1));
 	szOrderDataV.push_back("订单生成");
@@ -544,6 +544,19 @@ void CAddOrderPage::OnBnClickedButtonAddItem()
 	m_TableCS.Unlock();
 
 	CAllOrderTable::Instance()->AddOrder(szOrderDataV);
+
+	std::vector<CString> szAccountDataV;
+	szAccountDataV.push_back(m_szCurrInfo[1]);
+	szAccountDataV.push_back(szDay);
+	szAccountDataV.push_back("0");
+	szAccountDataV.push_back(std::to_string(dTotalFare).c_str());
+	CString szBalance;
+	szBalance.Format("%f", atof(m_szCurrInfo[4]) - dTotalFare);
+	szAccountDataV.push_back(szBalance);
+	CustomerAccountTable::Instance()->AddCustomerAccountRecord(m_szCurrInfo[1], szAccountDataV);
+
+	CCustomerListTable::Instance()->AlterCustomerInfoItem(m_szCurrInfo[1], "Balance", szBalance);
+	m_TableCustInfo.SetItemText(3, 1, szBalance);
 
 	UpdateWindow();
 }

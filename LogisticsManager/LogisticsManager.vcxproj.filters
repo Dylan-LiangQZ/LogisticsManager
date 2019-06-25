@@ -66,9 +66,6 @@
     <ClInclude Include="Pages\UserManageCreatePage.h">
       <Filter>Pages</Filter>
     </ClInclude>
-    <ClInclude Include="Pages\UserManageEditPage.h">
-      <Filter>Pages</Filter>
-    </ClInclude>
     <ClInclude Include="DBTables\AllOrderTable.h">
       <Filter>DBTables</Filter>
     </ClInclude>
@@ -77,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="LMCommonVariable.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pages\EnterStorePage.h">
+      <Filter>Pages</Filter>
+    </ClInclude>
+    <ClInclude Include="DBTables\EnterGoodsTable.h">
+      <Filter>DBTables</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -113,9 +116,6 @@
     <ClCompile Include="Pages\UserManageCreatePage.cpp">
       <Filter>Pages</Filter>
     </ClCompile>
-    <ClCompile Include="Pages\UserManageEditPage.cpp">
-      <Filter>Pages</Filter>
-    </ClCompile>
     <ClCompile Include="DBTables\AllOrderTable.cpp">
       <Filter>DBTables</Filter>
     </ClCompile>
@@ -124,6 +124,12 @@
     </ClCompile>
     <ClCompile Include="LMCommonVariable.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\EnterStorePage.cpp">
+      <Filter>Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="DBTables\EnterGoodsTable.cpp">
+      <Filter>DBTables</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -180,6 +186,18 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\Add.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\icon3.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\EnterGoods.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\icon4.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\Goods.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

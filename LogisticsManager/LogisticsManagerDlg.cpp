@@ -8,6 +8,7 @@
 #include "DlgProxy.h"
 #include "afxdialogex.h"
 #include <crtdbg.h>
+#include "Wininet.h"
 
 #include "pages\LoginDlg.h"
 
@@ -16,7 +17,7 @@
 #include "LMCommonVariable.h"
 
 const static int TOOLBARHEIGHT = 80;
-const static int STATUSBARHEIGHT = 40;
+const static int STATUSBARHEIGHT = 60;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -78,10 +79,18 @@ CLogisticsManagerDlg::~CLogisticsManagerDlg()
 
 	::SetEvent(m_BgExitHD);
 
+	m_PagesMap.clear();
+
 	delete m_pUserManagePage;
+	m_pUserManagePage = NULL;
 	delete m_pAddOrderPage;
+	m_pAddOrderPage = NULL;
 	delete m_pQueryOrderPage;
+	m_pQueryOrderPage = NULL;
 	delete m_pCSummaryPage;
+	m_pCSummaryPage = NULL;
+	delete m_pEnterStorePage;
+	m_pEnterStorePage = NULL;
 
 	Sleep(1000);
 
@@ -95,6 +104,9 @@ void CLogisticsManagerDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 }
 
+#define WM_INTERNETSTATUS_CHANGE WM_USER + 1
+#define WM_DATABASESTATUS_CHANGE WM_USER + 2
+
 BEGIN_MESSAGE_MAP(CLogisticsManagerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_CLOSE()
@@ -102,11 +114,24 @@ BEGIN_MESSAGE_MAP(CLogisticsManagerDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_COMMAND(ID_MENU_LOGIN, OnMENUlogin)
 	ON_COMMAND(IDB_ON_USER, OnBUTTONUser)
+	ON_COMMAND(IDB_ON_GOODS, OnBUTTONGOODS)
 	ON_COMMAND(IDB_ON_ADDORDER, OnBUTTONAddOrder)
 	ON_COMMAND(IDB_ON_QUERYORDER, OnBUTTONQueryOrder)
 	ON_COMMAND(IDB_ON_SUMMMERY, OnBUTTONSummary)
+	ON_MESSAGE(WM_INTERNETSTATUS_CHANGE, InternetStatusChanged)
+	ON_MESSAGE(WM_DATABASESTATUS_CHANGE, DatabaseStatusChanged)
 END_MESSAGE_MAP()
 
+enum StatusBarItem
+{
+	PROJECTNAME = 0,
+	INTERNETSTATUS = 1,
+	DATABASESTATUS = 2,
+	USERNAME = 3,
+	CURRENTTIME = 4,
+
+	MAX_STATUSBARITEM
+};
 
 // CLogisticsManagerDlg 消息处理程序
 
@@ -139,22 +164,10 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
+	SetIcon(LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME)), TRUE);
+
 	// TODO:  在此添加额外的初始化代码
 	LoadParameters();
-	
-	// Init DataBase
-	//_beginthreadex(NULL, 0, StatusCheckThread, this, 0, NULL);
-	BOOL bReply = CDBConn::Instance()->InitDataBase(m_szDataBaseName);
-	CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
-
-	//std::vector<CString> szTableColV1;
-	//szTableColV1.push_back("PhoneNumber");
-	//std::vector<CString> szTableRowDataV1;
-	//szTableRowDataV1.push_back("91096110");
-	//CDBConn::Instance()->AlterTableRecord("CustomerList", szTableColV1, szTableRowDataV1, "CustomerName = 'Zeyu'");
-	//szErrInfo = CDBConn::Instance()->GetLastErrInfo();
-	//
-	SetIcon(LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME)), TRUE);
 
 	m_Menu.LoadMenu(IDR_MENU1);
 	SetMenu(&m_Menu);
@@ -170,28 +183,31 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	Time = CTime::GetCurrentTime();
 	CString Str = Time.Format("%Y-%m-%d");
 
-	UINT Array[4];
-	for (int i = 0; i < 4; i++)
+	UINT Array[MAX_STATUSBARITEM];
+	for (int i = 0; i < MAX_STATUSBARITEM; i++)
 	{
-		Array[i] = 10000 + 1;
+		Array[i] = 10000 + i;
 	}
 	m_Statusbar.Create(this);
-	m_Statusbar.SetIndicators(Array, 4);
-	for (int n = 0; n < 3; n++)
-	{
-		m_Statusbar.SetPaneInfo(n, Array[n], 0, 80);
-	}
+	m_Statusbar.SetIndicators(Array, MAX_STATUSBARITEM);
 	m_Statusbar.SetPaneInfo(0, Array[0], 0, nCurScreenWidth*0.2);
-	m_Statusbar.SetPaneInfo(1, Array[1], 0, nCurScreenWidth*0.3);
-	m_Statusbar.SetPaneInfo(2, Array[2], 0, nCurScreenWidth*0.5);
-	m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：未连接");
-	m_Statusbar.SetPaneText(1, "  用户：请登录");
-	m_Statusbar.SetPaneText(2, "  当前时间 : " + Str);
+	m_Statusbar.SetPaneInfo(1, Array[1], 0, nCurScreenWidth*0.2);
+	m_Statusbar.SetPaneInfo(2, Array[2], 0, nCurScreenWidth*0.2);
+	m_Statusbar.SetPaneInfo(3, Array[3], 0, nCurScreenWidth*0.2);
+	m_Statusbar.SetPaneInfo(4, Array[4], 0, nCurScreenWidth*0.2);
+	m_Statusbar.SetPaneText(0, "  物流订单管理系统 ");
+	m_Statusbar.SetPaneText(1, "  互联网状态：未连接");
+	m_Statusbar.SetPaneText(2, "  数据库状态: 未连接");
+	m_Statusbar.SetPaneText(3, "  用户： 未登陆");
+	m_Statusbar.SetPaneText(4, "  当前时间 : " + Str);
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 
+	// Init DataBase
+	BOOL bReply = CDBConn::Instance()->InitDataBase();
+	bReply = CDBConn::Instance()->ConnectDataBase(m_szDataBaseName);
+	_beginthreadex(NULL, 0, StatusCheckThread, this, 0, NULL);
+
 	InitializeConfig();
-
-
 
 	// Add pages
 	CRect rectStatusBar;
@@ -215,13 +231,18 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	m_pQueryOrderPage->Create(IDD_DIALOG_QUERYORDER, this);
 
 	m_pCSummaryPage = new CSummaryPage;
+	//m_pCSummaryPage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
 	m_pCSummaryPage->Create(IDD_DIALOG_SUMMARY, this);
-	m_pCSummaryPage->ShowWindow(SW_HIDE);
+
+	m_pEnterStorePage = new CEnterStorePage;
+	m_pEnterStorePage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
+	m_pEnterStorePage->Create(IDD_DIALOG_ENTERSTORE, this);
 
 	m_PagesMap.insert(std::make_pair(0, m_pUserManagePage));
-	m_PagesMap.insert(std::make_pair(1, m_pAddOrderPage));
-	m_PagesMap.insert(std::make_pair(2, m_pQueryOrderPage));
-	m_PagesMap.insert(std::make_pair(3, m_pCSummaryPage));
+	m_PagesMap.insert(std::make_pair(1, m_pEnterStorePage));
+	m_PagesMap.insert(std::make_pair(2, m_pAddOrderPage));
+	m_PagesMap.insert(std::make_pair(3, m_pQueryOrderPage));
+	m_PagesMap.insert(std::make_pair(4, m_pCSummaryPage));
 
 
 	// 对话框 /////////////////////////////////////////////////////////////
@@ -229,11 +250,12 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	//if (Logindlg.DoModal() == IDOK)
 	{
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_USER, true);
+		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_GOODS, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_ADDORDER, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_QUERYORDER, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_SUMMMERY, true);
 
-		m_Statusbar.SetPaneText(1, "用户：zeyu");
+		m_Statusbar.SetPaneText(USERNAME, "用户：zeyu");
 	}
 	//else
 	{
@@ -369,11 +391,12 @@ void CLogisticsManagerDlg::InitializeConfig()
 		m_Imagelist.DeleteImageList();
 		m_Imagelist.Create(50, 40, ILC_COLOR24 | ILC_MASK, 1, 1);
 		m_Imagelist.Add(AfxGetApp()->LoadIcon(IDI_ICON_USER));
+		m_Imagelist.Add(AfxGetApp()->LoadIcon(IDI_ICON_Goods));
 		m_Imagelist.Add(AfxGetApp()->LoadIcon(IDI_ICON_ADD));
 		m_Imagelist.Add(AfxGetApp()->LoadIcon(IDI_ICON_QUERY));
 		m_Imagelist.Add(AfxGetApp()->LoadIcon(IDI_ICON_SUM));
 
-		const int nMenuMember = 4;
+		const int nMenuMember = 5;
 		UINT Array[nMenuMember];
 		for (int i = 0; i < nMenuMember; i++)
 		{
@@ -383,15 +406,17 @@ void CLogisticsManagerDlg::InitializeConfig()
 		m_Toolbar.Create(this);
 		m_Toolbar.SetButtons(Array, nMenuMember);
 		m_Toolbar.SetButtonText(0, "客户管理");
-		m_Toolbar.SetButtonText(1, "创建订单");
-		m_Toolbar.SetButtonText(2, "订单查询");
-		m_Toolbar.SetButtonText(3, "统计结算");
+		m_Toolbar.SetButtonText(1, "入库登记");
+		m_Toolbar.SetButtonText(2, "创建订单");
+		m_Toolbar.SetButtonText(3, "订单查询");
+		m_Toolbar.SetButtonText(4, "统计结算");
 		m_Toolbar.GetToolBarCtrl().SetButtonWidth(60, 120);
 		m_Toolbar.GetToolBarCtrl().SetImageList(&m_Imagelist);
 		m_Toolbar.SetSizes(CSize(100, TOOLBARHEIGHT), CSize(50, 40));
 		RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
 
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_USER, false);
+		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_GOODS, false);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_ADDORDER, false);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_QUERYORDER, false);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_SUMMMERY, false);
@@ -444,17 +469,27 @@ unsigned int _stdcall CLogisticsManagerDlg::StatusCheckThread(void *p)
 	CLogisticsManagerDlg* pthis = (CLogisticsManagerDlg*)p;
 	while (true)
 	{
-		BOOL bReply = CDBConn::Instance()->InitDataBase(pthis->m_szDataBaseName);
-		CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
-
-		if (!bReply)
-		{
-			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：连接失败!");
+		DWORD   flag;
+		if (InternetGetConnectedState(&flag, 0))
+		{	
+			pthis->PostMessage(WM_INTERNETSTATUS_CHANGE, 1, 0);
 		}
 		else
 		{
-			pthis->m_Statusbar.SetPaneText(0, "  物流订单管理系统   状态：已连接");
+			pthis->PostMessage(WM_INTERNETSTATUS_CHANGE, 0, 0);
 		}
+
+		if (CDBConn::Instance()->IsConnecting())
+		{
+			pthis->PostMessage(WM_DATABASESTATUS_CHANGE, 1, 1);
+		} 
+		else
+		{
+			pthis->PostMessage(WM_DATABASESTATUS_CHANGE, 0, 0);
+			CDBConn::Instance()->ConnectDataBase(pthis->m_szDataBaseName);
+		}
+
+		Sleep(500);
 
 		DWORD dwReply = ::WaitForSingleObject(pthis->m_BgExitHD,1000);
 		if (dwReply == WAIT_OBJECT_0)
@@ -473,6 +508,7 @@ void CLogisticsManagerDlg::OnMENUlogin()
 	if (Logindlg.DoModal() == IDOK)
 	{
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_USER, true);
+		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_GOODS, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_ADDORDER, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_QUERYORDER, true);
 		m_Toolbar.GetToolBarCtrl().EnableButton(IDB_ON_SUMMMERY, true);
@@ -495,6 +531,18 @@ void CLogisticsManagerDlg::OnBUTTONUser()
 
 	m_pUserManagePage->ShowWindow(SW_SHOW);
 	m_pUserManagePage->UpdateWindow();
+}
+
+
+void CLogisticsManagerDlg::OnBUTTONGOODS()
+{
+	for (auto iter = m_PagesMap.begin(); iter != m_PagesMap.end(); ++iter)
+	{
+		(*iter).second->ShowWindow(SW_HIDE);
+	}
+
+	m_pEnterStorePage->ShowWindow(SW_SHOW);
+	m_pEnterStorePage->UpdateWindow();
 }
 
 
@@ -531,4 +579,33 @@ void CLogisticsManagerDlg::OnBUTTONSummary()
 
 	m_pCSummaryPage->ShowWindow(SW_SHOW);
 	m_pCSummaryPage->UpdateWindow();
+}
+
+LRESULT CLogisticsManagerDlg::InternetStatusChanged(WPARAM wp, LPARAM lp)
+{
+	if (wp)
+	{
+		m_Statusbar.SetPaneText(INTERNETSTATUS, "  互联网状态：已连接。");
+	} 
+	else
+	{
+		m_Statusbar.SetPaneText(INTERNETSTATUS, "  互联网状态：连接失败！");
+	}
+
+	return 0;
+}
+
+
+LRESULT CLogisticsManagerDlg::DatabaseStatusChanged(WPARAM wp, LPARAM lp)
+{
+	if (wp)
+	{
+		m_Statusbar.SetPaneText(DATABASESTATUS, "  数据库状态：已连接。");
+	}
+	else
+	{
+		m_Statusbar.SetPaneText(DATABASESTATUS, "  数据库状态：连接失败！");
+	}
+
+	return 0;
 }

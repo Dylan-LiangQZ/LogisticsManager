@@ -15,6 +15,8 @@ public:
 	BOOL QueryOrderByDay(const CString szDay, std::vector<std::vector<CString>>& szOrderInfoVV);
 	BOOL QueryOrderByCusIDNDay(const CString szCustomerID, const CString szDay, std::vector<std::vector<CString>>& szOrderInfoVV);
 
+	BOOL AlterOrderItem(const CString szOrderID, const CString szColName, const CString szValue);
+
 protected:
 	CAllOrderTable();
 	~CAllOrderTable();

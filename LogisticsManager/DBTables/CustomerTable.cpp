@@ -8,19 +8,19 @@ CCustomerListTable::CCustomerListTable()
 	m_szTableName = "CustomerList";
 
 	m_szTableColumnV.clear();
-	m_szTableColumnV.push_back("CustomerName");
-	m_szTableColumnV.push_back("PhoneNumber");
-	m_szTableColumnV.push_back("Email");
-	m_szTableColumnV.push_back("Address");
-	m_szTableColumnV.push_back("Balance");
-	m_szTableColumnV.push_back("Destination1");
-	m_szTableColumnV.push_back("CustomerID1");
-	m_szTableColumnV.push_back("Destination2");
-	m_szTableColumnV.push_back("CustomerID2");
-	m_szTableColumnV.push_back("Destination3");
-	m_szTableColumnV.push_back("CustomerID3");
-	m_szTableColumnV.push_back("Destination4");
-	m_szTableColumnV.push_back("CustomerID4");
+	m_szTableColumnV.push_back("CustomerName");	// 0
+	m_szTableColumnV.push_back("PhoneNumber");	// 1
+	m_szTableColumnV.push_back("Email");		// 2
+	m_szTableColumnV.push_back("Address");		// 3
+	m_szTableColumnV.push_back("Balance");		// 4
+	m_szTableColumnV.push_back("Destination1");	// 5
+	m_szTableColumnV.push_back("CustomerID1");	// 6
+	m_szTableColumnV.push_back("Destination2");	// 7
+	m_szTableColumnV.push_back("CustomerID2");	// 8
+	m_szTableColumnV.push_back("Destination3");	// 9
+	m_szTableColumnV.push_back("CustomerID3");	// 10
+	m_szTableColumnV.push_back("Destination4");	// 11
+	m_szTableColumnV.push_back("CustomerID4");	// 12
 }
 
 
@@ -50,6 +50,41 @@ BOOL CCustomerListTable::AddCustomerInfo(const std::vector<CString>& szCustomerI
 {
 	BOOL bReply = CDBConn::Instance()->AddTableRecord(m_szTableName, m_szTableColumnV, szCustomerInfoV);
 	CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
+
+	return bReply;
+}
+
+
+BOOL CCustomerListTable::QueryAllCustomerInfo(std::vector<std::vector<CString>>& szAllCustomerInfoVV)
+{
+	BOOL bReply = FALSE;
+
+	szAllCustomerInfoVV.clear();
+	CString szSQLCmd;
+	szSQLCmd.Format("SELECT * FROM [%s] ", m_szTableName);
+
+	_RecordsetPtr pRecordset;
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
+
+	if (!bReply)
+	{
+		return bReply;
+	}
+
+	while (!pRecordset->adoEOF)
+	{
+		std::vector<CString> szRowDaraV;
+		auto iterCol = m_szTableColumnV.begin();
+		for (; iterCol != m_szTableColumnV.end(); ++iterCol)
+		{
+			szRowDaraV.push_back(pRecordset->GetCollect(_variant_t(*iterCol)));
+		}
+
+		szAllCustomerInfoVV.push_back(szRowDaraV);
+
+		pRecordset->MoveNext();
+	}
+	pRecordset->Close();
 
 	return bReply;
 }
@@ -180,6 +215,22 @@ BOOL CCustomerListTable::AlterCustomerInfoByQueryPhone(const CString szPhoneNum,
 }
 
 
+BOOL CCustomerListTable::AlterCustomerInfoItem(const CString szPhoneNum, const CString szColName, const CString szValue)
+{
+	BOOL bReply = FALSE;
+
+	CString szSQLCmd;
+	szSQLCmd.Format("UPDATE [%s] SET %s = '%s'", m_szTableName, szColName, szValue);
+	CString szCondtion;
+	szCondtion.Format(" WHERE PhoneNumber = '%s'", szPhoneNum);
+	szSQLCmd += szCondtion;
+
+	bReply = CDBConn::Instance()->SQLCommandExecute(szSQLCmd);
+
+	return FALSE;
+}
+
+
 CustomerAccountTable::CustomerAccountTable()
 {
 	m_szTableName = "CustomerAccount";
@@ -227,4 +278,39 @@ BOOL CustomerAccountTable::AddCustomerAccountRecord(const CString szPhoneNumber,
 	CString szErrInfo = CDBConn::Instance()->GetLastErrInfo();
 
 	return TRUE;
+}
+
+
+BOOL CustomerAccountTable::QueryCustomerAccountRecord(const CString szPhoneNumber, std::vector<std::vector<CString>>& szAccountRecordV)
+{
+	BOOL bReply = FALSE;
+
+	szAccountRecordV.clear();
+	CString szSQLCmd;
+	szSQLCmd.Format("SELECT * FROM [%s] WHERE PhoneNumber = '%s'", m_szTableName, szPhoneNumber);
+
+	_RecordsetPtr pRecordset;
+	bReply = CDBConn::Instance()->SQLCommandQuery(szSQLCmd, pRecordset);
+
+	if (!bReply)
+	{
+		return bReply;
+	}
+
+	while (!pRecordset->adoEOF)
+	{
+		std::vector<CString> szRowDaraV;
+		auto iterCol = m_szTableColumnV.begin();
+		for (; iterCol != m_szTableColumnV.end(); ++iterCol)
+		{
+			szRowDaraV.push_back(pRecordset->GetCollect(_variant_t(*iterCol)));
+		}
+
+		szAccountRecordV.push_back(szRowDaraV);
+
+		pRecordset->MoveNext();
+	}
+	pRecordset->Close();
+
+	return bReply;
 }

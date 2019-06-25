@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "Tinyxml/XMLFile.h"
 
@@ -42,9 +43,13 @@ public:
 	void	SavePayWay(CXMLElementHandle& elementHandle);
 
 	void	LoadDeliveyFare(CXMLElementHandle& elementHandle);
+	void	SetCusIDMap();
+	BOOL	CheckCusIDMap(const CString szID, const CString szPhone);
 
 	std::map<int, std::wstring>	m_PackingWayMap;
 	std::map<int, std::wstring>	m_PayWayMap;
+
+	std::map<CString, CString> m_CusIDnPhoneMap;
 
 	double m_dWeightVolumeThres;
 	double m_dWeightPrice;
