@@ -231,7 +231,7 @@ BOOL CLogisticsManagerDlg::OnInitDialog()
 	m_pQueryOrderPage->Create(IDD_DIALOG_QUERYORDER, this);
 
 	m_pCSummaryPage = new CSummaryPage;
-	//m_pCSummaryPage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
+	m_pCSummaryPage->SetWorkingArea(CRect(0, rectMenuBar.Height(), rectDlg.Width(), rectDlg.Height() - rectStatusBar.Height()));
 	m_pCSummaryPage->Create(IDD_DIALOG_SUMMARY, this);
 
 	m_pEnterStorePage = new CEnterStorePage;
